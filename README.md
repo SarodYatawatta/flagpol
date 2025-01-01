@@ -1,5 +1,5 @@
 # Flagpol
-Energy and polarization based on-line interference mitigation in radio astronomy.
+Energy and polarization based on-line interference mitigation in radio astronomy. Methods are described in [this paper](https://arxiv.org/abs/2412.14775).
 
 ## Flagpol
 Python code for on-line RFI mitigation using spectral kurtosis and polarization alignment of radio interferometric data.
@@ -13,7 +13,7 @@ Example:
 will use ```data.MS``` as the input data and perform flagging.
 
 ## RL
-Python code for training an RL agent for optimizing precision of arithmetic operations used in the flagging algorithm.
+Python code for training a reinforcement learning (RL) agent for optimizing precision of arithmetic operations used in the flagging algorithm.
 
 Example:
 
@@ -22,4 +22,4 @@ Example:
 ```
 will train an RL model to optimize the precision of the computing routines using the soft actor-critic algorithm.
 
-wo 18 dec 2024 15:16:16 CET
+wo  1 jan 2025 11:43:01 CET
