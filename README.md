@@ -20,6 +20,9 @@ Example:
 ```
   main_sac.py --episodes 100000 --seed 3333
 ```
-will train an RL model to optimize the precision of the computing routines using the soft actor-critic algorithm.
+will train an RL model to optimize the precision of the computing routines (cuda, 32 bit or 16 bit) using the soft actor-critic algorithm.
 
+
+## Requirements
+pytorch, numpy, scipy, python-casacore, gymnasium, matplotlib
 wo  1 jan 2025 11:43:01 CET
