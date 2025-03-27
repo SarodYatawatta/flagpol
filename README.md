@@ -23,8 +23,10 @@ Example:
 will train an RL model to optimize the precision of the computing routines (cuda, 32 bit or 16 bit) using the soft actor-critic algorithm.
 
 
+## Simul
+Python code for simulating realistic data with known RFI, and performing RFI mitigation. Thereafter, calculating false alarm and missed detection probabilities.
+
 ## Requirements
 pytorch, numpy, scipy, python-casacore, gymnasium, matplotlib
 
-
-wo  1 jan 2025 11:43:01 CET
+do 27 mrt 2025 14:23:52 CET
