@@ -1,6 +1,9 @@
+#! /usr/bin/env python
+
 import numpy as np
 from scipy import special as sp
 import matplotlib.pyplot as plt
+import argparse
 from simulator import Simulator
 
 EPS=1e-6
@@ -252,10 +255,36 @@ class Mitigator:
         for SNR in SNRs:
             self.run_mitigation(SNR)
 
-mit=Mitigator(n_time=2000,n_freq=512,w_time=10,w_freq=2)
-#mit.run_mitigation(100)
 
-# loop over simulations
-for nsim in range(400):
-   mit.reset()
-   mit.run_loop(SNRs=[1, 5, 10, 15, 20, 30, 50, 100, 200, 300, 500])
+def simulate(n_time=2000,n_freq=512,w_time=10,w_freq=2,n_runs=400):
+    mit=Mitigator(n_time=n_time,n_freq=n_freq,w_time=w_time,w_freq=w_freq)
+    #mit.run_mitigation(100)
+
+    # loop over simulations
+    print('INR Pmiss(SK) Pfa(SK) Pmiss(DS) Pfa(DS) Pmiss(BOTH) Pfa(BOTH)')
+    for nsim in range(n_runs):
+       mit.reset()
+       mit.run_loop(SNRs=[1, 5, 10, 15, 20, 30, 50, 100, 200, 300, 500])
+
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser(
+      description='Simulate energy and polarization based flagging',
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument('--runs',type=int,default=400,metavar='r',
+            help='Number of Monte Carlo runs')
+    parser.add_argument('--data_freq_window_size',type=int,default=2000,metavar='df',
+            help='Data block size, time samples')
+    parser.add_argument('--data_time_window_size',type=int,default=512,metavar='dt',
+            help='Data block size, frequency samples (channels)')
+    parser.add_argument('--freq_window_size',type=int,default=2,metavar='wf',
+            help='RFI mitigation window size (in channels) to use for RFI detection')
+    parser.add_argument('--time_window_size',type=int,default=10,metavar='wt',
+            help='RFI mitigation window size (in time) to use for RFI detection')
+
+    args=parser.parse_args()
+
+    simulate(n_time=args.data_time_window_size, n_freq=args.data_freq_window_size, w_time=args.time_window_size, w_freq=args.freq_window_size, n_runs=args.runs)
+ 
