@@ -100,10 +100,10 @@ class CriticNetwork(nn.Module):
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        self.load_state_dict(T.load(self.checkpoint_file))
+        self.load_state_dict(T.load(self.checkpoint_file,weights_only=False))
 
     def load_checkpoint_for_eval(self):
-        self.load_state_dict(T.load(self.checkpoint_file,map_location=T.device('cpu')))
+        self.load_state_dict(T.load(self.checkpoint_file,map_location=T.device('cpu'),weights_only=False))
 
 # input: state output: action
 class ActorNetwork(nn.Module):
@@ -174,10 +174,10 @@ class ActorNetwork(nn.Module):
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
-        self.load_state_dict(T.load(self.checkpoint_file))
+        self.load_state_dict(T.load(self.checkpoint_file,weights_only=False))
 
     def load_checkpoint_for_eval(self):
-        self.load_state_dict(T.load(self.checkpoint_file,map_location=T.device('cpu')))
+        self.load_state_dict(T.load(self.checkpoint_file,map_location=T.device('cpu'),weights_only=False))
 
 
 class Agent():

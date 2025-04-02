@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+
+import os
 import gymnasium as gym
 import torch
 import numpy as np
@@ -18,13 +21,19 @@ if __name__ == '__main__':
        help='number of episodes')
     parser.add_argument('--steps',default=10,type=int,metavar='t',
        help='number of steps per episode')
+    parser.add_argument('--models',default=4,type=int,metavar='e',
+       help='number of models in the ensemble')
+    parser.add_argument('--path',default='.', metavar='p',
+       help='path (directory) where the models are stored')
+
+
     args=parser.parse_args()
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    # ensemble 
-    N_ens=4
+    # ensemble models
+    N_ens=args.models
 
     # Data window (Time,Freq)
     T=5
@@ -40,7 +49,7 @@ if __name__ == '__main__':
     agents=list()
     for ci in range(N_ens):
       agent=Agent(gamma=0.99, batch_size=256, n_actions=n_actions,
-        max_mem_size=100000, n_inputs=n_inputs, n_hidden=256, lr_a=0.001, lr_c=0.001, name_prefix='run'+str(ci+1)+'/')
+        max_mem_size=100000, n_inputs=n_inputs, n_hidden=256, lr_a=0.001, lr_c=0.001, name_prefix=args.path+os.sep+'run'+str(ci+1)+os.sep)
       agents.append(agent)
 
     scores=[]
