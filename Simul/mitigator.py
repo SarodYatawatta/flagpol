@@ -275,10 +275,10 @@ if __name__=='__main__':
 
     parser.add_argument('--runs',type=int,default=400,metavar='r',
             help='Number of Monte Carlo runs')
-    parser.add_argument('--data_freq_window_size',type=int,default=2000,metavar='df',
-            help='Data block size, time samples')
-    parser.add_argument('--data_time_window_size',type=int,default=512,metavar='dt',
+    parser.add_argument('--data_freq_window_size',type=int,default=512,metavar='df',
             help='Data block size, frequency samples (channels)')
+    parser.add_argument('--data_time_window_size',type=int,default=2000,metavar='dt',
+            help='Data block size, time samples')
     parser.add_argument('--freq_window_size',type=int,default=2,metavar='wf',
             help='RFI mitigation window size (in channels) to use for RFI detection')
     parser.add_argument('--time_window_size',type=int,default=10,metavar='wt',
