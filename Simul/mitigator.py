@@ -4,6 +4,21 @@ import numpy as np
 from scipy import special as sp
 import matplotlib.pyplot as plt
 import argparse
+
+# try to import external modules
+have_extended=False
+try:
+    from hera_sim import defaults, foregrounds, noise, rfi
+    from pyphysim.modulators.fundamental import BPSK, QAM, QPSK, Modulator
+    from pyphysim.modulators import OFDM
+    from pyphysim import channels
+    from pyphysim.channels.fading import COST259_RAx, TdlChannel
+    from pyphysim.channels.fading_generators import JakesSampleGenerator
+    from pyphysim.util.misc import randn_c
+    have_extended=True 
+except ImportError:
+    print('Cannot import external modules, simulation with limited capabilities')
+
 from simulator import Simulator
 
 EPS=1e-6
@@ -42,15 +57,16 @@ def gsk_bounds(M,d,PFA):
 
 
 class Mitigator:
-    def __init__(self,n_time=1e6,n_freq=512,w_time=10, w_freq=2):
+    def __init__(self,n_time=1e6,n_freq=512,w_time=10, w_freq=2, extended_simul=False):
         # full window size in time x frequency samples
         self.n_time=int(n_time)
         self.n_freq=int(n_freq)
         # RFI mitigation window size
         self.w_time=int(w_time)
         self.w_freq=int(w_freq)
+        self.extended_simul=extended_simul
 
-        self.sim=Simulator(n_time=self.n_time,n_freq=self.n_freq)
+        self.sim=Simulator(n_time=self.n_time,n_freq=self.n_freq, extended_simul=extended_simul)
 
         # False alarm prob
         self.Pf=0.01
@@ -59,7 +75,7 @@ class Mitigator:
         # thresholds
         self.SK_low,self.SK_high=gsk_bounds(self.w_time*self.w_freq,self.sk_d,self.Pf)
         self.SK_low=0.05
-        self.SK_high=2.2
+        self.SK_high=2.2 # for LOFARvis use ~0.8
         self.DS_gamma=ds_lower_bound(self.w_time*self.w_freq,self.Pf)*1.5
         print(f'Thresholds for window {self.w_time*self.w_freq} gamma {self.DS_gamma} SK {self.SK_low} {self.SK_high}')
 
@@ -116,13 +132,20 @@ class Mitigator:
          for both methods
         """
         if self.sim.XX is None:
-           self.sim.generate_data()
+           if self.extended_simul:
+              self.sim.generate_data_fx()
+           else:
+              self.sim.generate_data()
 
         # SNR: signal/noise, signal=RFI, noise=background
         XX=self.sim.XX+SNR*self.sim.XX_rfi
         XY=self.sim.XY+SNR*self.sim.XY_rfi
         YX=self.sim.YX+SNR*self.sim.YX_rfi
         YY=self.sim.YY+SNR*self.sim.YY_rfi
+
+        # update time/freq size
+        self.n_time=XX.shape[0]
+        self.n_freq=XX.shape[1]
 
         #self.plot_data(XX,XY,YX,YY,'before.png')
         Iw=XX+YY
@@ -131,7 +154,7 @@ class Mitigator:
         Vw=1j*(XY-YX)
 
         # ground truth RFI mask
-        m_rfi=(np.abs(self.sim.XX_rfi)>0) | (np.abs(self.sim.XY_rfi)>0) | (np.abs(self.sim.YX_rfi)>0) | (np.abs(self.sim.YY_rfi)>0)
+        m_rfi=(np.abs(self.sim.XX_rfi)>EPS) | (np.abs(self.sim.XY_rfi)>EPS) | (np.abs(self.sim.YX_rfi)>EPS) | (np.abs(self.sim.YY_rfi)>EPS)
 
         # RFI masks
         m_ds=np.zeros(XX.shape,dtype=bool)
@@ -256,8 +279,8 @@ class Mitigator:
             self.run_mitigation(SNR)
 
 
-def simulate(n_time=2000,n_freq=512,w_time=10,w_freq=2,n_runs=400):
-    mit=Mitigator(n_time=n_time,n_freq=n_freq,w_time=w_time,w_freq=w_freq)
+def simulate(n_time=2000,n_freq=512,w_time=10,w_freq=2,n_runs=400,extended=False):
+    mit=Mitigator(n_time=n_time,n_freq=n_freq,w_time=w_time,w_freq=w_freq,extended_simul=extended)
     #mit.run_mitigation(100)
 
     # loop over simulations
@@ -283,8 +306,13 @@ if __name__=='__main__':
             help='RFI mitigation window size (in channels) to use for RFI detection')
     parser.add_argument('--time_window_size',type=int,default=10,metavar='wt',
             help='RFI mitigation window size (in time) to use for RFI detection')
+    parser.add_argument('--extended',default=False, action=argparse.BooleanOptionalAction, help='If true, simulate LOFAR data stream from station to correlator, and use HERA_sim and pyphysim to generate sky and RFI signals')
 
     args=parser.parse_args()
 
-    simulate(n_time=args.data_time_window_size, n_freq=args.data_freq_window_size, w_time=args.time_window_size, w_freq=args.freq_window_size, n_runs=args.runs)
+    if not have_extended and args.extended:
+        print('Disabling request for extended simulation, required modules not imported')
+        args.extended=False
+
+    simulate(n_time=args.data_time_window_size, n_freq=args.data_freq_window_size, w_time=args.time_window_size, w_freq=args.freq_window_size, n_runs=args.runs, extended=args.extended)
  

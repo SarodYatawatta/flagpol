@@ -1,6 +1,6 @@
 This code simulates a data block, ~ 1 sec duration and 200 kHz bandwidth, sampled at 1e6 samples and 512 channels. All 4 XX,XY,YX,YY correlations are simulated. This data block consists of
 
-  * sky noise (power law)
+  * sky noise (power law) + receiver noise
   * sky sources (discrete sources, at random locations)
 and RFI
   * transient RFI, randomly determined parameters: time x frequency window, intensity, polarization level, modulating signal (fixed or sinusoidal)
@@ -16,3 +16,5 @@ How to run the script
 ```
 
 The output will show the false alarm (Pfa) and missed detection (Pmiss) probabilities for various interference to noise ratios (INR).
+
+If Hera_sim and pyphysim packages are installed, *--extended* option can simulate the LOFAR signal path from station (subband stream) to correlator.
