@@ -46,10 +46,12 @@ def gsk_bounds(M,d,PFA):
     m1=1
     m2=(2*( M**2)* Nd *(1 + Nd))/((-1 + M) *(6 + 5* M* Nd + (M**2)*( Nd**2)))
     m3=(8*( M**3)* Nd* (1 + Nd)* (-2 + Nd* (-5 + M *(4 + Nd))))/(((-1 + M)**2)* (2 + M* Nd) *(3 +M* Nd)* (4 + M* Nd)* (5 + M* Nd))
+
     mm=(-(m3-2*m2**2)/m3+x)/(m3/2/m2)
     mm[mm<0.0]=EPS
-    yup=np.abs((1.0-sp.gammainc(4*(m2**3/(m3**2)),mm))-PFA)
-    ylow=np.abs(sp.gammainc(4*(m2**3/(m3**2)),mm)-PFA)
+    m2m3=4*(m2**3/(m3**2))
+    yup=np.abs((1.0-sp.gammainc(m2m3,mm))-PFA)
+    ylow=np.abs(sp.gammainc(m2m3,mm)-PFA)
     id1=np.argmin(ylow)
     id2=np.argmin(yup)
 
@@ -71,11 +73,11 @@ class Mitigator:
         # False alarm prob
         self.Pf=0.01
         # SK d
-        self.sk_d=1.0/2
+        self.sk_d=1.0#/2
         # thresholds
         self.SK_low,self.SK_high=gsk_bounds(self.w_time*self.w_freq,self.sk_d,self.Pf)
-        self.SK_low=0.05
-        self.SK_high=2.2 # for LOFARvis use ~0.8
+        self.SK_low=0.15
+        self.SK_high=2.4 # for LOFARvis use ~0.8
         self.DS_gamma=ds_lower_bound(self.w_time*self.w_freq,self.Pf)*1.5
         print(f'Thresholds for window {self.w_time*self.w_freq} gamma {self.DS_gamma} SK {self.SK_low} {self.SK_high}')
 
@@ -147,7 +149,8 @@ class Mitigator:
         self.n_time=XX.shape[0]
         self.n_freq=XX.shape[1]
 
-        #self.plot_data(XX,XY,YX,YY,'before.png')
+        #for PLOTTING
+        #self.plot_data(XX,XY,YX,YY,'before_'+str(SNR)+'.png')
         Iw=XX+YY
         Qw=XX-YY
         Uw=XY+YX
@@ -185,7 +188,8 @@ class Mitigator:
                    YX[t*self.w_time:(t+1)*self.w_time,f*self.w_freq:(f+1)*self.w_freq]=EPS
                    YY[t*self.w_time:(t+1)*self.w_time,f*self.w_freq:(f+1)*self.w_freq]=EPS
 
-        #self.plot_data(XX,XY,YX,YY,'after.png')
+        #for PLOTTING
+        #self.plot_data(XX,XY,YX,YY,'after_'+str(SNR)+'.png')
         sk_miss,sk_false,ds_miss,ds_false,both_miss,both_false=self.calculate_probabilities(m_rfi,m_sk,m_ds)
         print(f'{SNR} {sk_miss} {sk_false} {ds_miss} {ds_false} {both_miss} {both_false}')
 
@@ -270,6 +274,7 @@ class Mitigator:
        axs[3].set(xlabel='Frequency',ylabel='', title='YY')
        plt.tight_layout()
        plt.savefig(filename)
+       plt.close()
 
     def reset(self):
         self.sim.reset()
@@ -281,7 +286,9 @@ class Mitigator:
 
 def simulate(n_time=2000,n_freq=512,w_time=10,w_freq=2,n_runs=400,extended=False):
     mit=Mitigator(n_time=n_time,n_freq=n_freq,w_time=w_time,w_freq=w_freq,extended_simul=extended)
-    #mit.run_mitigation(100)
+    #for PLOTTING
+    #mit.reset()
+    #mit.run_mitigation(200)
 
     # loop over simulations
     print('INR Pmiss(SK) Pfa(SK) Pmiss(DS) Pfa(DS) Pmiss(BOTH) Pfa(BOTH)')
@@ -307,8 +314,11 @@ if __name__=='__main__':
     parser.add_argument('--time_window_size',type=int,default=10,metavar='wt',
             help='RFI mitigation window size (in time) to use for RFI detection')
     parser.add_argument('--extended',default=False, action=argparse.BooleanOptionalAction, help='If true, simulate LOFAR data stream from station to correlator, and use HERA_sim and pyphysim to generate sky and RFI signals')
+    parser.add_argument('--seed',default=0,type=int,metavar='s',
+       help='random seed to use')
 
     args=parser.parse_args()
+    np.random.seed(args.seed)
 
     if not have_extended and args.extended:
         print('Disabling request for extended simulation, required modules not imported')

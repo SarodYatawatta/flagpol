@@ -80,12 +80,18 @@ class Simulator:
             self.YY[t,:] = self.YY[t,:]*skynoise
 
         # simulate celestial sources
+        # baseline coords
+        uvw=np.random.randn(3)*300
         for ci in range(self.n_src):
             # ul+vm+w(n-1) over time domain
-            lmn=np.random.randn(1)*np.cos(self.t/(np.random.rand(1)*20))
+            lmn=np.random.rand(3)-0.5
+            # time variation of uvw
+            u=lmn[0]*uvw[0]*np.cos((self.t+np.random.rand())/(np.random.rand(1)*20))
+            v=lmn[1]*uvw[1]*np.cos((self.t+np.random.rand())/(np.random.rand(1)*20))
+            w=(lmn[2]-1)*uvw[2]*np.cos((self.t+np.random.rand())/(np.random.rand(1)*20))
             # 2 pi f/c over freq, converted to MHz
             pifc=2*np.pi*self.f/(3e8)*1e6
-            sexp=np.exp(-1j*np.outer(lmn,pifc))
+            sexp=np.exp(-1j*np.outer(u+v+w,pifc))
             iquv=np.random.rand(4)*self.max_sky_scale
             self.XX +=sexp*iquv[0]
             self.XY +=sexp*iquv[1]
@@ -93,7 +99,7 @@ class Simulator:
             self.YY +=sexp*iquv[3]
 
         # add receiver noise, first simulate two voltage bins
-        recv_noise_scale=10
+        recv_noise_scale=100*np.random.rand()
         V_1x=np.random.randn(self.n_time,self.n_freq)+1j*np.random.randn(self.n_time,self.n_freq)
         V_1y=np.random.randn(self.n_time,self.n_freq)+1j*np.random.randn(self.n_time,self.n_freq)
         V_2x=np.random.randn(self.n_time,self.n_freq)+1j*np.random.randn(self.n_time,self.n_freq)
